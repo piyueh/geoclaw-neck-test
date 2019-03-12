@@ -1,0 +1,44 @@
+# the absolute path to the directory where this makefile is
+WD := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
+
+# path to clawpack
+CLAW := $(WD)/clawpack-v5.5.0
+
+# path to geoclaw
+GEOLIB := $(CLAW)/geoclaw/src/2d/shallow
+
+# makefile for Clawpack code
+CLAWMAKE := $(CLAW)/clawutil/src/Makefile.common
+
+# adjust these variables if desired:
+# ----------------------------------
+CLAW_PKG := geoclaw             # Clawpack package to use
+EXE := $(WD)/../bin/xgeoclaw.original # Executable to create
+SETRUN_FILE := setrun.py        # File containing function to make data
+OUTDIR := _output               # Directory for output
+SETPLOT_FILE := setplot.py      # File containing function to set plots
+PLOTDIR := _plots               # Directory for plots
+
+# default Fortran compiler; can be overwritten by an environment variable
+FC ?= gfortran
+
+# compiler flags can be specified here or set as an environment variable
+FFLAGS ?= -O2 -fopenmp
+
+# source files used for geoclaw-landspill
+include $(GEOLIB)/Makefile.geoclaw
+
+# package sources excluded
+EXCLUDE_MODULES :=
+EXCLUDE_SOURCES := qinit.f90
+
+# custom source files for this program
+MODULES :=
+SOURCES := \
+	$(CLAW)/riemann/src/rpn2_geoclaw.f \
+	$(CLAW)/riemann/src/rpt2_geoclaw.f \
+	$(CLAW)/riemann/src/geoclaw_riemann_utils.f \
+	$(WD)/qinit_neck_test.f90
+
+# include makefile containing standard definitions and make options:
+include $(CLAWMAKE)

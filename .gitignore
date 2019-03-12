@@ -1,0 +1,13 @@
+*.data
+_output*
+_plots
+__pycache__
+.output
+.data
+*.o
+total_volume.csv
+topodata
+pyclaw.log
+clawpack-v5.5.0
+clawpack-v5.5.0.tar.gz
+bin
