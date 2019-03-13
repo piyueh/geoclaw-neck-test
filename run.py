@@ -45,20 +45,20 @@ def create_data(casepath):
         logger.error("Case folder % does not have setrun.py.", casepath)
         raise FileNotFoundError("Case folder {} does not have setrun.py.".format(casepath))
 
-    if casepath != sys.path[0]:
-        sys.path.insert(0, casepath) # add case folder to module search path
-
     pwd = os.getcwd() # get current working directory
     os.chdir(casepath) # go to case folder
 
+
+    if casepath != sys.path[0]:
+        sys.path.insert(0, casepath) # add case folder to module search path
     import setrun # import the setrun.py
     rundata = setrun.setrun() # get ClawRunData object
     rundata.write() # write *.data to the case folder
     del rundata
     del sys.modules["setrun"]
+    del sys.path[0]
 
     os.chdir(pwd) # go back to pwd
-    del sys.path[0]
 
 def run_case(solver, casepath):
     """Run a single case with specified solver."""
@@ -85,6 +85,7 @@ def run_case(solver, casepath):
         nframes = rundata.clawdata.num_output_times+1
         del rundata
         del sys.modules["setrun"]
+        del sys.path[0]
 
         nfiles = [
             len(glob.glob(os.path.join(out_path, "fort.t"+"[0-9]"*4))),
@@ -95,7 +96,6 @@ def run_case(solver, casepath):
         # check if this case is already completed
         if all([n == nframes for n in nfiles]):
             logger.warning("Case %s seems to be already done. Skip it", casepath)
-            del sys.path[0]
             return
 
         logger.warning("Case %s is not complete. Remove outputs and re-run.", casepath)
