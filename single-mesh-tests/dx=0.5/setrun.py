@@ -64,16 +64,16 @@ def setrun(claw_pkg='geoclaw'):
 
     # Lower and upper edge of computational domain:
     clawdata.lower[0] = 0.
-    clawdata.upper[0] = 200.
+    clawdata.upper[0] = 152.
 
     clawdata.lower[1] = 0.
-    clawdata.upper[1] = 100.
+    clawdata.upper[1] = 60.
 
 
 
     # Number of grid cells: Coarsest grid
-    clawdata.num_cells[0] = 400
-    clawdata.num_cells[1] = 200
+    clawdata.num_cells[0] = 304
+    clawdata.num_cells[1] = 120
 
     # ---------------
     # Size of system:
@@ -117,8 +117,8 @@ def setrun(claw_pkg='geoclaw'):
 
     if clawdata.output_style == 1:
         # Output nout frames at equally spaced times up to tfinal:
-        clawdata.num_output_times = 720
-        clawdata.tfinal = 3600
+        clawdata.num_output_times = 360
+        clawdata.tfinal = 1800
         clawdata.output_t0 = True  # output at initial (or restart) time?
 
     elif clawdata.output_style == 2:
@@ -168,8 +168,8 @@ def setrun(claw_pkg='geoclaw'):
 
     # Desired Courant number if variable dt used, and max to allow without
     # retaking step with a smaller dt:
-    clawdata.cfl_desired = 0.9
-    clawdata.cfl_max = 0.95
+    clawdata.cfl_desired = 0.95
+    clawdata.cfl_max = 0.99
 
     # Maximum number of time steps to allow between output times:
     clawdata.steps_max = 100000
@@ -378,7 +378,7 @@ def setgeo(rundata):
     topo_data = rundata.topo_data
     # for topography, append lines of the form
     #    [topotype, minlevel, maxlevel, t1, t2, fname]
-    topo_data.topofiles.append([3, 1, 5, 0., 1.e10, '../../topo.asc'])
+    topo_data.topofiles.append([3, 1, 5, 0., 1.e10, '../../topodata/topo.asc'])
 
     # == setdtopo.data values ==
     dtopo_data = rundata.dtopo_data

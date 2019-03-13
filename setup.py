@@ -151,39 +151,39 @@ def create_topo():
     import rasterio
 
     X, Y = numpy.meshgrid(
-        numpy.linspace(-0.5, 200.5, 202),
-        numpy.linspace(-0.5, 100.5, 102))
+        numpy.linspace(-0.5, 152.5, 154),
+        numpy.linspace(-0.5, 60.5, 62))
 
     logger.debug("Setting up elevation values")
 
     # init
-    elevation = numpy.zeros((102, 202), dtype=numpy.float64)
+    elevation = numpy.zeros_like(X, dtype=numpy.float64)
 
     # inclined entrance
-    elevation[X <= 80.] = (80. - X[X <= 80.]) * numpy.tan(numpy.pi/36.)
+    elevation[X <= 60.] = (60. - X[X <= 60.]) * numpy.tan(numpy.pi/36.)
 
     # mountains and channels
-    idx_base = (X <= 90.)
-    idx_low = numpy.logical_and(idx_base, (X-90.)**2+Y**2 <= 48.5**2)
-    idx_high = numpy.logical_and(idx_base, (X-90.)**2+(Y-100.)**2 <= 48.5**2)
-    elevation[idx_low] = numpy.sqrt(48.5**2-(X[idx_low]-90.)**2-Y[idx_low]**2)
-    elevation[idx_high] = numpy.sqrt(48.5**2-(X[idx_high]-90.)**2-(Y[idx_high]-100.)**2)
+    idx_base = (X <= 70.)
+    idx_low = numpy.logical_and(idx_base, (X-70.)**2+(Y+20.)**2 <= 48.5**2)
+    idx_high = numpy.logical_and(idx_base, (X-70.)**2+(Y-80.)**2 <= 48.5**2)
+    elevation[idx_low] = numpy.sqrt(48.5**2-(X[idx_low]-70.)**2-(Y[idx_low]+20.)**2)
+    elevation[idx_high] = numpy.sqrt(48.5**2-(X[idx_high]-70.)**2-(Y[idx_high]-80.)**2)
 
-    idx_base = numpy.logical_and(X > 90., X <= 110)
-    idx_low = numpy.logical_and(idx_base, Y <= 48.5)
-    idx_high = numpy.logical_and(idx_base, Y >= 51.5)
-    elevation[idx_low] = numpy.sqrt(48.5**2-Y[idx_low]**2)
-    elevation[idx_high] = numpy.sqrt(48.5**2-(Y[idx_high]-100.)**2)
+    idx_base = numpy.logical_and(X > 70., X <= 90)
+    idx_low = numpy.logical_and(idx_base, Y <= 28.5)
+    idx_high = numpy.logical_and(idx_base, Y >= 31.5)
+    elevation[idx_low] = numpy.sqrt(48.5**2-(Y[idx_low]+20)**2)
+    elevation[idx_high] = numpy.sqrt(48.5**2-(Y[idx_high]-80.)**2)
 
-    idx_base = (X >= 110.)
-    idx_low = numpy.logical_and(idx_base, (X-110.)**2+Y**2 <= 48.5**2)
-    idx_high = numpy.logical_and(idx_base, (X-110.)**2+(Y-100.)**2 <= 48.5**2)
-    elevation[idx_low] = numpy.sqrt(48.5**2-(X[idx_low]-110.)**2-Y[idx_low]**2)
-    elevation[idx_high] = numpy.sqrt(48.5**2-(X[idx_high]-110.)**2-(Y[idx_high]-100.)**2)
+    idx_base = (X >= 90.)
+    idx_low = numpy.logical_and(idx_base, (X-90.)**2+(Y+20.)**2 <= 48.5**2)
+    idx_high = numpy.logical_and(idx_base, (X-90.)**2+(Y-80.)**2 <= 48.5**2)
+    elevation[idx_low] = numpy.sqrt(48.5**2-(X[idx_low]-90.)**2-(Y[idx_low]+20.)**2)
+    elevation[idx_high] = numpy.sqrt(48.5**2-(X[idx_high]-90.)**2-(Y[idx_high]-80.)**2)
 
     # pool
-    idx_low = numpy.logical_and(X >= 145., X <= 165.)
-    idx_high = numpy.logical_and(Y >= 34.5, Y <= 65.5)
+    idx_low = numpy.logical_and(X >= 124., X <= 144.)
+    idx_high = numpy.logical_and(Y >= 16, Y <= 44)
     idx_base = numpy.logical_and(idx_low, idx_high)
     elevation[idx_base] = -1.0
 
@@ -194,9 +194,9 @@ def create_topo():
     elevation += 10.0
 
     profile = rasterio.profiles.Profile({
-        "driver": "AAIGrid", "width": 202, "height": 102, "count": 1,
-        "crs": rasterio.crs.CRS.from_epsg(3857),
-        "transform": rasterio.transform.from_origin(-1., 101., 1., 1.),
+        "driver": "AAIGrid", "width": X.shape[1], "height": X.shape[0],
+        "count": 1, "crs": rasterio.crs.CRS.from_epsg(3857),
+        "transform": rasterio.transform.from_origin(-1., 61., 1., 1.),
         "dtype": elevation.dtype, "nodata": -9999})
 
     repo_path = os.path.dirname(os.path.abspath(__file__))

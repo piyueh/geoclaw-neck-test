@@ -13,7 +13,7 @@ CLAWMAKE := $(CLAW)/clawutil/src/Makefile.common
 # adjust these variables if desired:
 # ----------------------------------
 CLAW_PKG := geoclaw             # Clawpack package to use
-EXE := $(WD)/../bin/xgeoclaw.update_and_refine2flag2 # Executable to create
+EXE := $(WD)/../bin/xgeoclaw.update_and_flag2refine2 # Executable to create
 SETRUN_FILE := setrun.py        # File containing function to make data
 OUTDIR := _output               # Directory for output
 SETPLOT_FILE := setplot.py      # File containing function to set plots

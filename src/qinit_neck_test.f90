@@ -28,7 +28,7 @@ subroutine qinit(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
         do j=1-mbc,my+mbc
             y = ylower + (j - 0.5d0) * dy
             rx = x - 20D0
-            ry = y - 50D0
+            ry = y - 30D0
             if (dsqrt((rx*rx)+(ry*ry)) <= 5D0) then
                 q(1, i, j) = 0.2D0
             endif
