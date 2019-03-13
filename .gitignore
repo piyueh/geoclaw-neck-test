@@ -7,13 +7,13 @@ __pycache__
 *.o
 *.mod
 *.smod
-total_volume.csv
+*.csv
 topodata
 pyclaw.log
 clawpack-v5.5.0
 clawpack-v5.5.0.tar.gz
 bin
-neck_test_setup.log
-neck_test_run.log
+neck_test_*.log
 stdout.txt
 stderr.txt
+figs
