@@ -33,7 +33,7 @@ logger.addHandler(fh)
 
 def download_clawpack():
     """Download Clawpack v5.5.0 tarballs."""
-    import requests
+    from urllib.request import urlretrieve
 
     repo_path = os.path.dirname(os.path.abspath(__file__))
     src_path = os.path.join(repo_path, "src")
@@ -45,15 +45,9 @@ def download_clawpack():
 
     # download clawpack v5.5.0 tarball
     logger.debug("Downloading %s", tar_path)
-    response = requests.get(
+    urlretrieve(
         "https://github.com/clawpack/clawpack/files/2330639/clawpack-v5.5.0.tar.gz",
-        headers={"Accept": "application/vnd.github.v3+json"})
-    response.raise_for_status()
-
-    # write the clawpack tarball to local drive
-    logger.debug("Saving the tarball to %s", tar_path)
-    with open(tar_path, "wb") as f:
-        f.write(response.content)
+        tar_path)
 
     logger.info("Downloading %s succeeded.", tar_path)
 
@@ -148,7 +142,6 @@ def build_executables():
 def create_topo():
     """Create topo.asc for the tests."""
     import numpy
-    import rasterio
 
     X, Y = numpy.meshgrid(
         numpy.linspace(-0.5, 152.5, 154),
@@ -193,20 +186,25 @@ def create_topo():
     # lift the elevation to above sea level
     elevation += 10.0
 
-    profile = rasterio.profiles.Profile({
-        "driver": "AAIGrid", "width": X.shape[1], "height": X.shape[0],
-        "count": 1, "crs": rasterio.crs.CRS.from_epsg(3857),
-        "transform": rasterio.transform.from_origin(-1., 61., 1., 1.),
-        "dtype": elevation.dtype, "nodata": -9999})
-
     repo_path = os.path.dirname(os.path.abspath(__file__))
     topodir_path = os.path.join(repo_path, "topodata")
     if not os.path.isdir(topodir_path):
         os.makedirs(topodir_path)
 
     logger.debug("Writing to topodata/topo.asc")
-    with rasterio.open(os.path.join(topodir_path, "topo.asc"), mode="w", **profile) as raster:
-        raster.write_band(1, elevation)
+    headers = \
+        "ncols\t\t\t{}\n".format(X.shape[1]) + \
+        "nrows\t\t\t{}\n".format(X.shape[0]) + \
+        "xllcorner\t\t{}\n".format(-1.0) + \
+        "yllcorner\t\t{}\n".format(-1.0) + \
+        "cellsize\t\t{}\n".format(1.0) + \
+        "NODATA_value\t\t{}\n".format(-9999)
+
+    with open(os.path.join(topodir_path, "topo.asc"), "w") as f:
+        f.write(headers)
+        for j in reversed(range(X.shape[0])):
+            elevation[j, :].tofile(f, " ")
+            f.write("\n")
 
     logger.info("Creating topo file succeeded.")
 
