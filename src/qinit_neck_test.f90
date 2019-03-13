@@ -1,35 +1,31 @@
 ! qinit routine for parabolic bowl problem, only single layer
-subroutine qinit(meqn,mbc,mx,my,xlower,ylower,dx,dy,q,maux,aux)
-
-    use geoclaw_module, only: grav
-
+subroutine qinit(meqn, mbc, mx, my, xlower, ylower, dx, dy, q, maux, aux)
     implicit none
 
     ! Subroutine arguments
-    integer, intent(in) :: meqn,mbc,mx,my,maux
-    real(kind=8), intent(in) :: xlower,ylower,dx,dy
-    real(kind=8), intent(inout) :: q(meqn,1-mbc:mx+mbc,1-mbc:my+mbc)
-    real(kind=8), intent(inout) :: aux(maux,1-mbc:mx+mbc,1-mbc:my+mbc)
-
-    ! Parameters for problem
-    real(kind=8), parameter :: a = 1.d0
-    real(kind=8), parameter :: sigma = 0.5d0
-    real(kind=8), parameter :: h0 = 0.1d0
+    integer, intent(in) :: meqn, mbc, mx, my, maux
+    real(kind=8), intent(in) :: xlower, ylower, dx, dy
+    real(kind=8), intent(inout) :: q(meqn, 1-mbc:mx+mbc, 1-mbc:my+mbc)
+    real(kind=8), intent(inout) :: aux(maux, 1-mbc:mx+mbc, 1-mbc:my+mbc)
 
     ! Other storage
-    integer :: i,j
-    real(kind=8) :: omega,x,y,eta
-    real(kind=8) :: rx, ry
-    
-    omega = sqrt(2.d0 * grav * h0) / a
+    integer :: i, j
+    real(kind=8) :: rx2, ry2
+
+    ! initialize the q array
+    q = 0D0
     
     do i=1-mbc,mx+mbc
-        x = xlower + (i - 0.5d0)*dx
+
+        rx2 = xlower + (i - 0.5d0) * dx - 20D0
+        rx2 = rx2 * rx2
+
         do j=1-mbc,my+mbc
-            y = ylower + (j - 0.5d0) * dy
-            rx = x - 20D0
-            ry = y - 30D0
-            if (dsqrt((rx*rx)+(ry*ry)) <= 5D0) then
+
+            ry2 = ylower + (j - 0.5d0) * dy - 30D0
+            ry2 = ry2 * ry2
+
+            if ((rx2 + ry2) <= 25D0) then
                 q(1, i, j) = 0.2D0
             endif
         enddo
