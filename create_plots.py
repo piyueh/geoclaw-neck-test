@@ -206,6 +206,63 @@ def plot_flows():
 
             logger.info("Done creating figures for %s.", casename)
 
+def create_single_gif(casepath):
+    """Create an animation.gif for a single case with ImageMagick."""
+    import time
+    import subprocess
+
+    # paths
+    repo_path = os.path.dirname(os.path.abspath(__file__))
+    casepath = os.path.join(repo_path, "figs", casepath)
+
+    stdout = open(os.path.join(casepath, "stdout.gif.txt"), "w")
+
+    logger.info("Creating animation in %s. Redirect STDOUT/STDERR to %s",
+                casepath, stdout.name)
+
+    job = subprocess.Popen(
+        ["convert", "-verbose",
+         os.path.join(casepath, "depth*.png"),
+         os.path.join(casepath, "animation.gif")],
+        cwd=repo_path, stdout=stdout, stderr=stdout)
+
+    while job.poll() is None:
+        time.sleep(3)
+
+    stdout.close()
+
+    logger.info("Done creating animation in %s", casepath)
+
+def create_gifs():
+    """Create animated GIFs."""
+    import multiprocessing
+
+    cases = [
+        "amr-tests/original/level01",
+        "amr-tests/original/level02",
+        "amr-tests/fix_update/level01",
+        "amr-tests/fix_update/level02",
+        "amr-tests/fix_flag2refine2/level01",
+        "amr-tests/fix_flag2refine2/level02",
+        "amr-tests/fix_update_and_flag2refine2/level01",
+        "amr-tests/fix_update_and_flag2refine2/level02",
+        "single-mesh-tests/dx=4/level01",
+        "single-mesh-tests/dx=2/level01",
+        "single-mesh-tests/dx=1/level01",
+        "single-mesh-tests/dx=0.5/level01",
+        "single-mesh-tests/dx=0.25/level01",
+        "single-mesh-tests/dx=0.125/level01"]
+
+    try:
+        nprocs = int(os.environ["OMP_NUM_THREADS"])
+    except KeyError:
+        nprocs = int(os.cpu_count()/2)
+
+    # multiprocesses
+    p = multiprocessing.Pool(nprocs)
+    p.map(create_single_gif, cases)
+
 if __name__ == "__main__":
     plot_volumes()
     plot_flows()
+    create_gifs()
