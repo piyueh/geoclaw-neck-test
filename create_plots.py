@@ -134,5 +134,78 @@ def plot_volumes():
     figname = os.path.join(figs_path, "volume_AMR_level_2.png")
     plot_single_volume(amr_level_2, "AMR level 2 (dx=1)", figname)
 
+def plot_flows():
+    """Plot flows of all cases in parallel."""
+    import time
+    import subprocess
+
+    # paths
+    repo_path = os.path.dirname(os.path.abspath(__file__))
+    figs_path = os.path.join(repo_path, "figs")
+    cmd = os.path.join(repo_path, "plotflow_cmd.py")
+
+    if not os.path.isdir(figs_path):
+        os.makedirs(figs_path)
+
+    # AMR cases
+    amr_cases_lvl1 = {
+        "AMR/original/level 1": ["amr-tests/original", 1],
+        "AMR/new update.f90/level 1": ["amr-tests/fix_update", 1],
+        "AMR/new flag2refine2.f90/level 1": ["amr-tests/fix_flag2refine2", 1],
+        "AMR/new update.f90 & flag2refine2.f90/level 1": [
+            "amr-tests/fix_update_and_flag2refine2", 1]}
+
+    amr_cases_lvl2 = {
+        "AMR/original/level 2": ["amr-tests/original", 2],
+        "AMR/new update.f90/level 2": ["amr-tests/fix_update", 2],
+        "AMR/new flag2refine2.f90/level 2": ["amr-tests/fix_flag2refine2", 2],
+        "AMR/new update.f90 & flag2refine2.f90/level 2": [
+            "amr-tests/fix_update_and_flag2refine2", 2]}
+
+    uniform_cases = {
+        "unifrom mesh/dx = 4": ["single-mesh-tests/dx=4", 1],
+        "unifrom mesh/dx = 2": ["single-mesh-tests/dx=2", 1],
+        "unifrom mesh/dx = 1": ["single-mesh-tests/dx=1", 1],
+        "unifrom mesh/dx = 0.5": ["single-mesh-tests/dx=0.5", 1],
+        "unifrom mesh/dx = 0.25": ["single-mesh-tests/dx=0.25", 1],
+        "unifrom mesh/dx = 0.125": ["single-mesh-tests/dx=0.125", 1]}
+
+    try:
+        nprocs = int(os.environ["OMP_NUM_THREADS"])
+    except KeyError:
+        nprocs = int(os.cpu_count()/2)
+
+    for caseset in [amr_cases_lvl1, amr_cases_lvl2, uniform_cases]:
+        for casename, [casepath, level] in caseset.items():
+            logger.info("Creating figures for %s with %d CPU threads.", casename, nprocs)
+            jobs = []
+            stdfiles = []
+            for i in range(nprocs):
+
+                target = os.path.join(figs_path, casepath, "level{:02}".format(level))
+                if not os.path.isdir(target):
+                    os.makedirs(target)
+                stdfiles.append(open(os.path.join(
+                    target, "stdout.{:02}.txt".format(i)), "w"))
+                framelist = list(range(i, 361, nprocs))
+
+                jobs.append(subprocess.Popen(
+                    ["python", cmd, "--casename", casepath,
+                     "--casepath", casepath, "--level", str(level),
+                     "--subtitle", casename, "--framelist"] +
+                    str(framelist).strip("[]").replace(",", "").split(),
+                    cwd=repo_path, stdout=stdfiles[-1], stderr=stdfiles[-1]))
+
+                logger.info("Thread %d, STDOUT/STDERR file: %s", i, stdfiles[-1].name)
+
+            while any([job.poll() is None for job in jobs]):
+                time.sleep(5)
+
+            for i in range(nprocs):
+                stdfiles[i].close()
+
+            logger.info("Done creating figures for %s.", casename)
+
 if __name__ == "__main__":
     plot_volumes()
+    plot_flows()
