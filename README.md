@@ -2,9 +2,9 @@ geoclaw-neck-test
 =================
 
 This repository includes all necessary components for reproducing neck-test with
-GeoClaw v5.5.0. The neck-test is a set of tests to show that the possible 
-non-conservative behavior of GeoClaw when the base topography has a neck-like 
-(or channel-like) feature.
+GeoClaw v5.5.0. The neck-test is a set of tests to show the possible 
+violation of volume conservation in GeoClaw when the base topography 
+has a neck-like (or channel-like) feature.
 
 -----------------------------
 ## 1. Steps to reproduce results
@@ -86,7 +86,7 @@ First, we run a series of simulations with a single-level mesh in each simulatio
 The tested resolutions are dx = 4, 2, 1, 0.5, 0.25, and 0.125m. Note the 
 resolution of the underlying topography is 1m. The purpose of these tests is to 
 confirm that the volume is conserved when there is no AMR involved. From the 
-first figure in [this subsection](#33-conservation-of-fluid-volumes), we can see 
+first figure in [the subsection 3.3](#33-conservation-of-fluid-volumes), we can see 
 that for all resolutions, the volumes are always constants with respect to time. 
 This proves that the volume conservation issue does not happen when there is no AMR.
 
@@ -125,7 +125,7 @@ each other. This is because the finer mesh can nicely capture the channel.
 
 ### 3.2. Using a two-level AMR mesh for a simulation (coarse grid: dx=4; fine mesh: dx=1)
 
-This section shows that the volume conservation happens when we have AMR meshes.
+This section shows the issue of volume conservation when we have AMR meshes.
 The mesh is always a two-level AMR mesh with the coarse mesh to be dx=4 and
 the fine mesh to be dx=1. Base on the result from the [single-level mesh 
 simulation of dx=1m](#313-dx--1), this two-level AMR mesh is assumed to be 
@@ -150,14 +150,14 @@ The [third one](#323-modified-flag2refine2f90) does not use the modified
 named `flag2refine2_modified.f90` in the folder `src`. The modified version
 of `flag2refine2.f90` simplifies the flagging process for mesh refinement: as
 long as there is fluid in a cell, the cell will always be refined regardless
-whether the depth is greater or less than `dry_tolerance`.
+of whether the depth is greater or less than `dry_tolerance`.
 
-The [last one](324-modified-updatef90--modified-flag2refine2f90) uses both
+The [last one](#324-modified-updatef90--modified-flag2refine2f90) uses both
 `update_modified.f90` and `flag2refine2.f90`. And this case is the only one
 giving us reasonable flow patterns and correct volume conservation behavior.
 
 The second and the third figures in 
-[this subsection](#33-conservation-of-fluid-volumes)
+[the subsection 3.3](#33-conservation-of-fluid-volumes)
 show the volume conservation on the coarse and the fine meshes of the two-level
 AMR grid. When compared to the corresponding non-AMR single-level grid, on the
 coarse mesh, none of the four cases follows volume conservation. However, on the 
@@ -169,7 +169,8 @@ fine mesh of this case is conserved.
 
 This case uses original GeoClaw v5.5.0 without any modification. It shows that,
 even though the fine mesh has a 1m resolution, it still can't correctly produce 
-reasonable flow patterns, while the non-AMR 1m mesh can.
+reasonable flow patterns, while the non-AMR 1m mesh can. Moreover, the volume
+disappears from the computational domain, cuasing the issue of volume conservation.
 
 *Depth on the level 1 grid*
 
@@ -181,7 +182,7 @@ reasonable flow patterns, while the non-AMR 1m mesh can.
 
 #### 3.2.2. Modified `update.f90`
 
-The `update_modified.f90` code modifies how the solver updates a coarse-mesh 
+The `update_modified.f90` modifies how the solver updates a coarse-mesh 
 cell based on the values of its children. When the averaged fluid surface of the 
 child cells is below the topography elevation of the parent cell, the 
 `update_modified.f90` sets the fluid depth in the parent cell to `dry_tolerance`, 
