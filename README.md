@@ -51,9 +51,11 @@ create 2D and 3D plots of the topography, after executing `setup.py`, execute
 `$ python plot_topo.py`.
 
 *2D plot of the topography*
+
 ![2D topo](figs/topo_2d.png)
 
 *3D plot of the topography*
+
 ![3D topo](figs/topo_3d.png)
 
 ### 2.2. Initial condition (I.C.)
