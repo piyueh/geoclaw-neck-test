@@ -6,6 +6,29 @@ GeoClaw v5.5.0. The neck-test is a set of tests to show the possible
 violation of volume conservation in GeoClaw when the base topography 
 has a neck-like (or channel-like) feature.
 
+**Content**
+1. [Steps to reproduce results](#1-steps-to-reproduce-results)
+2. [Input data](#2-input-data)
+    1. [Topography](#21-topography)
+    2. [Initial condition (I.C.)](#22-initial-condition-ic)
+    3. [Other parameters](#23-other-parameters)
+3. [Results](#3-results)
+    1. [Using a single-level mesh for a simulation](#31-using-a-single-level-mesh-for-a-simulation)
+        1. [dx = 4](#311-dx--4)
+        2. [dx = 2](#312-dx--2)
+        3. [dx = 1](#313-dx--1)
+        4. [dx = 0.5](#314-dx--05)
+        5. [dx = 0.25](#315-dx--025)
+        6. [dx = 0.125](#316-dx--0125)
+    2. [Using a two-level AMR mesh for a simulation (coarse grid: dx=4; fine mesh: dx=1)](#32-using-a-two-level-amr-mesh-for-a-simulation-coarse-grid-dx4-fine-mesh-dx1)
+        1. [Original GeoClaw](#321-original-geoclaw)
+        2. [Modified `update.f90`](#322-modified-updatef90)
+        3. [Modified `flag2refine2.f90`](#323-modified-flag2refine2f90)
+        4. [Modified `update.f90` + modified `flag2refine2.f90`](#324-modified-updatef90--modified-flag2refine2f90)
+    3. [Conservation of fluid volumes](#33-conservation-of-fluid-volumes)
+4. [Contact](#4-contact)
+
+
 -----------------------------
 ## 1. Steps to reproduce results
 
