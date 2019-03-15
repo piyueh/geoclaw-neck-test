@@ -83,6 +83,24 @@ features, it may not be necessary to improve the initial condition setup.
 
 ### 3.1. Using a single-level mesh for a simulation
 
+First we run a series of simulations with a single-level mesh in each simulation.
+The tested resolutions are dx = 4, 2, 1, 0.5, 0.25, and 0.125m. Note the 
+resolution of the underlying topography is 1m. The purpose of these tests is to 
+confirm that the volume is conserved when there is no AMR involved. From the 
+first figure in [this subsection](#33-conservation-of-fluid-volumes), we can see 
+that for all resolutions, the volumes are always constants with respect to time. 
+This proves the volume conservation issue does not happen when there is no AMR.
+
+The followings are the flow animations of these cases. When using coarse meshes,
+for example, dx=4 and dx=1, the flow patterns are somehow different from those
+with finer meshes. This may due the fact that coarse meshes are more difficult 
+to capture the channel-like feature, especially the channel width is only 3 
+meters in this case. Nevertheless, the volumes are still conserved with respect 
+to time for these coarse meshes. When the resolution reaches at least the 
+topography resolution (1m in this case), the flow patterns start to agree with
+each other. This is because the channel can be nicely captured by the grid size
+smaller than 1m.
+
 #### 3.1.1. dx = 4
 
 ![dx=4 animation](figs/single-mesh-tests/dx=4/level01/animation.gif)
@@ -109,7 +127,51 @@ features, it may not be necessary to improve the initial condition setup.
 
 ### 3.2. Using a two-level AMR mesh for a simulation (coarse grid: dx=4; fine mesh: dx=1)
 
+This section shows that the volume conservation happens when we have AMR meshes.
+The mesh is always a two-level AMR mesh with the coarse mesh to be dx=4 and
+the fine mesh to be dx=1. Base on the result from the [single-level mesh 
+simulation of dx=1m](#313-dx--1), this two-level AMR mesh is assumed to be 
+good enough to capture reasonable flow patterns.
+
+There are a total of four cases in this series. The [first 
+one](#321-original-geoclaw) is ran with original GeoClaw v5.5.0. The [second
+one](#322-modified-updatef90) is ran with a modified version of the source code 
+`update.f90`, which is named `update_modified.f90` in the folder `src`:
+
+```
+$ diff <GeoClaw 5.5.0 src>/2d/shallow/update.f90 src/update_modified.f90
+------------------------------------------------------------------------
+160c160
+<                             hc = min(hav, (max(etaav-bc*capac, 0.0d0)))
+---
+>                             hc = min(hav, (max(etaav-bc*capac, dry_tolerance)))
+```
+
+The [thrid one](#323-modified-flag2refine2f90) does not use the modified 
+`update.f90`, but it uses a modified version of `flag2refine2.f90`, which is
+named `flag2refine2_modified.f90` in the folder `src`. The modified version
+of `flag2refine2.f90` simplfies the flagging process for mesh refinement: as
+long as there is fluid in a cell, the cell will always be refined regardless
+whether the depth is greater or less than `dry_tolerance`.
+
+The [last one](324-modified-updatef90--modified-flag2refine2f90) uses both
+`update_modified.f90` and `flag2refine2.f90`. And this case is the only one
+giving us reasonable flow patterns and correct volume conservation behavior.
+
+The second and the third figures in 
+[this subsection](#33-conservation-of-fluid-volumes)
+show the volume conservation on the coarse and the fine meshes of the two-level
+AMR grid. When compared to corresponding non-AMR single-level grid, on the
+coarse mesh, non of the four cases follows volume conservation. However, on the 
+fine mesh, the one with both `update_modified.f90` and `flag2refine2.f90` can 
+perfectly match the result of non-AMR grid. In other words, the volume on the
+fine mesh of this case is conserved.
+
 #### 3.2.1. Original GeoClaw
+
+This case uses original GeoClaw v5.5.0 without any modification. It shows that,
+even though the fine mesh has 1m resolution, it still can't correctly produce 
+reasonable flow patterns, while the non-AMR 1m mesh can.
 
 *Depth on the level 1 grid*
 
@@ -121,6 +183,18 @@ features, it may not be necessary to improve the initial condition setup.
 
 #### 3.2.2. Modified `update.f90`
 
+The `update_modified.f90` code modifies how the solver updates a coarse-mesh 
+cell based on the values of its children. When the averaged fluid surface of the 
+child cells is below the topography elevation of the parent cell, the 
+`update_modified.f90` sets the fluid depth in the parent cell to `dry_tolerance`, 
+while the original `update.f90` just sets the depth of the parent to zero. This 
+modification is done in hopes of triggering a mesh refinement to the cells
+surrounding the parent cell (i.e., the buffer layer). And so a better 
+topography resolution can be obtained by the solver in this region. 
+Unfortunately, due to the critera in `flag2refine2.f90`, adding `dry_tolerance` 
+to the parent cell is not enough to trigger the mesh refinement to the parent's 
+neighbors.
+
 *Depth on the level 1 grid*
 
 ![fix_update animation](figs/amr-tests/fix_update/level01/animation.gif)
@@ -130,6 +204,15 @@ features, it may not be necessary to improve the initial condition setup.
 ![fix_update animation](figs/amr-tests/fix_update/level02/animation.gif)
 
 #### 3.2.3. Modified `flag2refine2.f90`
+
+The refinement criteria is simplified so that all wet cells are flagged for 
+refinement regardless whether the depths are higher or lower than the 
+`dry_tolerance`. The simulation result is still erroneous, which is expected. 
+This is due to that the problematic parent cell still has a zero depth when 
+using original `update.f90`. So the solver still think that parent cell is a dry
+cell, even though this dry parent cell actually has wet child cells. And the 
+solver does not flag this parent cell for refinement, and therefore its neighbor
+cells (the buffer layer) will not be refined.
 
 *Depth on the level 1 grid*
 
@@ -141,6 +224,11 @@ features, it may not be necessary to improve the initial condition setup.
 
 #### 3.2.4. Modified `update.f90` + modified `flag2refine2.f90`
 
+After using both `update_modified.f90` and `flag2refine2_modified.f90`, whenever
+a parent cell has any number of wet child cells, it's always identified as a wet 
+cell, and the solver always flags such a cell for refinement. The case produces
+expected results.
+
 *Depth on the level 1 grid*
 
 ![fix_update_and_flag2refine2 animation](figs/amr-tests/fix_update_and_flag2refine2/level01/animation.gif)
@@ -150,6 +238,12 @@ features, it may not be necessary to improve the initial condition setup.
 ![fix_update_and_flag2refine2 animation](figs/amr-tests/fix_update_and_flag2refine2/level02/animation.gif)
 
 ### 3.3. Conservation of fluid volumes
+
+This section shows that with single-level meshes (i.e., non-AMR meshes), the
+volumes are always conserved. But with two-level AMR, only the [fourth 
+case](#324-modified-updatef90--modified-flag2refinef90) conserves the volume on
+the fine mesh, while others don't. And on the coarse mesh, all cases do not 
+conserve the volume.
 
 *Volume conservation of the single-level mesh cases*
 
