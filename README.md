@@ -9,7 +9,7 @@ non-conservative behavior of GeoClaw when the base topography has a neck-like
 -----------------------------
 ## 1. Steps to reproduce results
 
-To reporduce the results, follow these commands (on Linux):
+To reproduce the results, follow these commands (on Linux):
 
 ```
 $ python setup.py
@@ -20,7 +20,7 @@ $ python create_plots.py
 
 The followings are the dependencies required. The versions of these dependencies 
 are the ones I used. It doesn't mean other versions do not work. It's just saying 
-I don't know what will happen if other versions are used.
+I don't know what will happen if using different versions.
 
 1. gfortran 8
 2. python 3.6.8
@@ -34,21 +34,20 @@ My test environment is Arch Linux with kernel 5.0.0-arch1-1-ARCH.
 
 ### 2.1. Topography
 
-The topography is a made-up. Its spatial resolution is 1m by 1m. The inflow 
-region is an inclined flat surface with an angle of 5 degree. The inclined
-region spans from x=0 to x=60m. This provides required gravity to drive the flow.
+The topography is made-up. Its spatial resolution is 1m by 1m. The inflow 
+region is an inclined flat surface with an angle of 5 degrees and spans 
+from x=0 to x=60m. This provides required gravity to drive the flow.
 A channel with a converging entrance and a diverging exit is in the middle 
-of the whole topography. And it begins from approximately x=21.5m to x=138.5m. 
-The width of the moddle section of the channel is 3m. Part of the channel 
-entrance is located in the inclined region, while its middle and rear sections 
+of the whole topography, beginning from approximately x=21.5m to x=138.5m. 
+The width of the middle section of the channel is 3m. Part of the channel 
+entrance is located in the inclined region, while its central and rear sections 
 are at horizontal level. There is a pool-like feature after the exit of the 
 channel. The purpose of the pool is to collect the fluid, and hence the flow 
 will not touch the computational boundaries. This should eliminate the effect 
 of boundary conditions.
 
-The topgraphy data will be created when the `setup.py` script is executed. To
-create 2D and 3D plots of the topography, after executing `setup.py`, execute
-`$ python plot_topo.py`.
+The `setup.py` script creates the topography data. To create 2D and 3D plots 
+of the topography, execute `$ python plot_topo.py` after running `setup.py`.
 
 *2D plot of the topography*
 
@@ -83,23 +82,22 @@ features, it may not be necessary to improve the initial condition setup.
 
 ### 3.1. Using a single-level mesh for a simulation
 
-First we run a series of simulations with a single-level mesh in each simulation.
+First, we run a series of simulations with a single-level mesh in each simulation.
 The tested resolutions are dx = 4, 2, 1, 0.5, 0.25, and 0.125m. Note the 
 resolution of the underlying topography is 1m. The purpose of these tests is to 
 confirm that the volume is conserved when there is no AMR involved. From the 
 first figure in [this subsection](#33-conservation-of-fluid-volumes), we can see 
 that for all resolutions, the volumes are always constants with respect to time. 
-This proves the volume conservation issue does not happen when there is no AMR.
+This proves that the volume conservation issue does not happen when there is no AMR.
 
 The followings are the flow animations of these cases. When using coarse meshes,
-for example, dx=4 and dx=1, the flow patterns are somehow different from those
-with finer meshes. This may due the fact that coarse meshes are more difficult 
+for example, dx=4 and dx=2, the flow patterns are somehow different from those
+with finer meshes. This may because coarse meshes are more difficult 
 to capture the channel-like feature, especially the channel width is only 3 
 meters in this case. Nevertheless, the volumes are still conserved with respect 
 to time for these coarse meshes. When the resolution reaches at least the 
 topography resolution (1m in this case), the flow patterns start to agree with
-each other. This is because the channel can be nicely captured by the grid size
-smaller than 1m.
+each other. This is because the finer mesh can nicely capture the channel.
 
 #### 3.1.1. dx = 4
 
@@ -134,9 +132,9 @@ simulation of dx=1m](#313-dx--1), this two-level AMR mesh is assumed to be
 good enough to capture reasonable flow patterns.
 
 There are a total of four cases in this series. The [first 
-one](#321-original-geoclaw) is ran with original GeoClaw v5.5.0. The [second
-one](#322-modified-updatef90) is ran with a modified version of the source code 
-`update.f90`, which is named `update_modified.f90` in the folder `src`:
+one](#321-original-geoclaw) is running with the original GeoClaw v5.5.0. The 
+[second one](#322-modified-updatef90) is running with a modified version of the 
+source code `update.f90`, which is named `update_modified.f90` in the folder `src`:
 
 ```
 $ diff <GeoClaw 5.5.0 src>/2d/shallow/update.f90 src/update_modified.f90
@@ -147,10 +145,10 @@ $ diff <GeoClaw 5.5.0 src>/2d/shallow/update.f90 src/update_modified.f90
 >                             hc = min(hav, (max(etaav-bc*capac, dry_tolerance)))
 ```
 
-The [thrid one](#323-modified-flag2refine2f90) does not use the modified 
+The [third one](#323-modified-flag2refine2f90) does not use the modified 
 `update.f90`, but it uses a modified version of `flag2refine2.f90`, which is
 named `flag2refine2_modified.f90` in the folder `src`. The modified version
-of `flag2refine2.f90` simplfies the flagging process for mesh refinement: as
+of `flag2refine2.f90` simplifies the flagging process for mesh refinement: as
 long as there is fluid in a cell, the cell will always be refined regardless
 whether the depth is greater or less than `dry_tolerance`.
 
@@ -161,16 +159,16 @@ giving us reasonable flow patterns and correct volume conservation behavior.
 The second and the third figures in 
 [this subsection](#33-conservation-of-fluid-volumes)
 show the volume conservation on the coarse and the fine meshes of the two-level
-AMR grid. When compared to corresponding non-AMR single-level grid, on the
-coarse mesh, non of the four cases follows volume conservation. However, on the 
-fine mesh, the one with both `update_modified.f90` and `flag2refine2.f90` can 
-perfectly match the result of non-AMR grid. In other words, the volume on the
+AMR grid. When compared to the corresponding non-AMR single-level grid, on the
+coarse mesh, none of the four cases follows volume conservation. However, on the 
+fine mesh, the one with both `update_modified.f90` and `flag2refine2_modified.f90`
+can perfectly match the result of the non-AMR grid. In other words, the volume on the
 fine mesh of this case is conserved.
 
 #### 3.2.1. Original GeoClaw
 
 This case uses original GeoClaw v5.5.0 without any modification. It shows that,
-even though the fine mesh has 1m resolution, it still can't correctly produce 
+even though the fine mesh has a 1m resolution, it still can't correctly produce 
 reasonable flow patterns, while the non-AMR 1m mesh can.
 
 *Depth on the level 1 grid*
@@ -187,11 +185,11 @@ The `update_modified.f90` code modifies how the solver updates a coarse-mesh
 cell based on the values of its children. When the averaged fluid surface of the 
 child cells is below the topography elevation of the parent cell, the 
 `update_modified.f90` sets the fluid depth in the parent cell to `dry_tolerance`, 
-while the original `update.f90` just sets the depth of the parent to zero. This 
+while the original `update.f90` sets the depth of the parent to zero. This 
 modification is done in hopes of triggering a mesh refinement to the cells
 surrounding the parent cell (i.e., the buffer layer). And so a better 
 topography resolution can be obtained by the solver in this region. 
-Unfortunately, due to the critera in `flag2refine2.f90`, adding `dry_tolerance` 
+Unfortunately, due to the criteria in `flag2refine2.f90`, adding `dry_tolerance` 
 to the parent cell is not enough to trigger the mesh refinement to the parent's 
 neighbors.
 
@@ -205,11 +203,11 @@ neighbors.
 
 #### 3.2.3. Modified `flag2refine2.f90`
 
-The refinement criteria is simplified so that all wet cells are flagged for 
-refinement regardless whether the depths are higher or lower than the 
+The refinement criterion is simplified so that all wet cells are flagged for 
+refinement regardless of whether the depths are higher or lower than the 
 `dry_tolerance`. The simulation result is still erroneous, which is expected. 
 This is due to that the problematic parent cell still has a zero depth when 
-using original `update.f90`. So the solver still think that parent cell is a dry
+using original `update.f90`. So the solver still thinks that parent cell is a dry
 cell, even though this dry parent cell actually has wet child cells. And the 
 solver does not flag this parent cell for refinement, and therefore its neighbor
 cells (the buffer layer) will not be refined.
@@ -241,7 +239,7 @@ expected results.
 
 This section shows that with single-level meshes (i.e., non-AMR meshes), the
 volumes are always conserved. But with two-level AMR, only the [fourth 
-case](#324-modified-updatef90--modified-flag2refinef90) conserves the volume on
+case](#324-modified-updatef90--modified-flag2refine2f90) conserves the volume on
 the fine mesh, while others don't. And on the coarse mesh, all cases do not 
 conserve the volume.
 
