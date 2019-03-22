@@ -122,7 +122,7 @@ def build_executables():
     os.environ["CLAW"] = os.path.join(src_path, "clawpack-v5.5.0")
 
     if not os.path.isdir(os.path.join(repo_path, "bin")):
-        os.makedirs(os.path.isdir(os.path.join(repo_path, "bin")))
+        os.makedirs(os.path.join(repo_path, "bin"))
 
     for makefile in makefiles:
         logger.debug("Running make .exe for %s.", makefile)
